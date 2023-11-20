@@ -63,6 +63,7 @@ class LikedDisliked(Base):
     photo = relationship('Photos', uselist=False, backref='likesdislikes')
 
 
+#Создание таблиц
 def create_tables(engine):
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
