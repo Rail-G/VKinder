@@ -1,19 +1,8 @@
 import sqlalchemy as sq
-# import os
-# import psycopg2
 
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from config import DIALECT, USERNAME, PASSWORD, HOST, DATABASE
-# from dotenv import load_dotenv
 
-# load_dotenv()
-
-# engine = sq.create_engine(os.getenv('MY_DSN'))
-eng = f"{DIALECT}://{USERNAME}:{PASSWORD}@{HOST}/{DATABASE}"
-engine = sq.create_engine(eng)
-
-Session = sessionmaker(bind=engine)
-session = Session()
 
 Base = declarative_base()
 
@@ -25,16 +14,13 @@ class Users(Base):
     user_first_name = sq.Column(sq.String)
     user_last_name = sq.Column(sq.String)
     user_link = sq.Column(sq.String)
-    user_city = sq.Column(sq.String)
-    user_age = sq.Column(sq.Integer)
-    user_gender = sq.Column(sq.String)
+
 
 class Photos(Base):
     __tablename__ = 'photos'
 
     photo_id = sq.Column(sq.Integer, primary_key=True)
-    photo_link = sq.Column(sq.String)
-    photo_likes = sq.Column(sq.Integer)
+    photo_vk_id = sq.Column(sq.String)
     user_id = sq.Column(sq.Integer, sq.ForeignKey('users.user_id'), nullable=False)
     user = relationship('Users', backref='photos')
 
@@ -59,7 +45,7 @@ class LikedDisliked(Base):
     __tablename__ = 'likesdislikes'
 
     like_dislike_id = sq.Column(sq.Integer, primary_key=True)
-    reaction = sq.Column(sq.Boolean)
+    reaction = sq.Column(sq.Integer)
     user_id = sq.Column(sq.Integer, sq.ForeignKey('users.user_id'), nullable=False)
     photo_id = sq.Column(sq.Integer, sq.ForeignKey('photos.photo_id'), nullable=False)
     user = relationship('Users', uselist=False, backref='likesdislikes')
