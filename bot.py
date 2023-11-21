@@ -42,18 +42,41 @@ class VKinder():
     
     # find_users
     def search_partner(self, city_id: tuple, user_sex: int, user_bdate: str) -> None:
-        search_result = self.vk_user.method('users.search', {'city': city_id[0], 'sex': user_sex, 'age_from': user_bdate-3, 'age_to': user_bdate+3})
+        user_id_city = self.user_city()
+        search_result = self.vk_user.method('users.search', {'city': user_id_city[0], 'sex': user_sex, 'age_from': self.user_bdate()-3, 'age_to': self.user_bdate()+3})
         if search_result.get('count') == 0:
-            return 'Нам очень жаль, что вы не смогли найти вашего партнёра(-шу) в городе {}'.format(city_id[1])
+            return 'Нам очень жаль, что вы не смогли найти вашего партнёра(-шу) в городе {}'.format(user_id_city[1])
         for i in search_result['items']:
-            # BD INSERT users
+            # BD INSERT users: id, vk_id, firstname, lastname, link
             pass
 
     # photo_id
     def photo_id(self) -> list:
-        # BD SELECT users
-        photo_id = self.vk_user.method('photos.get', {'owner_id': BD, 'album_id': 'profile', 'extended': 1, 'count': 3})['items']
+        # BD SELECT users: vk_id
+        photo_id = self.vk_user.method('photos.get', {'owner_id': BD, 'album_id': 'profile', 'extended': 1})['items']
         popular_photos = sorted(photo_id, key=lambda x: x['likes']['count'], reverse=True)
         photo_id = [i['id'] for i in popular_photos]
-        return photo_id
+        return photo_id[:3]
 
+    # send_users_photo
+    def send_photos(self, user_id: int, photo_id: list) -> str:
+        keyboard = VkKeyboard(inline=True) 
+        keyboard.add_button('Like', color=VkKeyboardColor.SECONDARY)
+        keyboard.add_button('Пропустить', color=VkKeyboardColor.SECONDARY)
+        keyboard.add_button('Dislike', color=VkKeyboardColor.SECONDARY)
+        for i in photo_id:
+            self.vk_group.method('messages.send', {'user_id': user_id, 'random_id': 0, 'attachment': f'photo348914127_{i}', 'keyboard': keyboard.get_keyboard()})
+            for event in self.bot_longpoll.listen():
+                if event.type == VkBotEventType.MESSAGE_NEW:
+                    if event.object.message['text'] == 'Like':
+                        self.vk_group.method('messages.send', {'user_id': user_id, 'random_id': 0, 'message': "Фотография добавлена в понравившиеся."})
+                        #DB Update photo like to 1
+                    elif event.object.message['text'] == 'Dislike':
+                        self.vk_group.method('messages.send', {'user_id': user_id, 'random_id': 0, 'message': "Мы постараемся вам больше не показывать эту фотографию."})
+                        #DB Update photo like to 0
+                    break
+    
+    # DB_users
+    # DB_
+    # DB_
+    # DB_
