@@ -1,0 +1,9 @@
+GROUP_TOKEN = ''
+USER_TOKEN = ''
+GROUP_ID = ''
+
+DIALECT = ''
+USERNAME = ''
+PASSWORD = ''
+HOST = ''
+DATABASE = ''
