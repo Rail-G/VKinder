@@ -1,13 +1,16 @@
 import sqlalchemy as sq
-import os
-import psycopg2
+# import os
+# import psycopg2
 
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
-from dotenv import load_dotenv
+from config import DIALECT, USERNAME, PASSWORD, HOST, DATABASE
+# from dotenv import load_dotenv
 
-load_dotenv()
+# load_dotenv()
 
-engine = sq.create_engine(os.getenv('MY_DSN'))
+# engine = sq.create_engine(os.getenv('MY_DSN'))
+eng = f"{DIALECT}://{USERNAME}:{PASSWORD}@{HOST}/{DATABASE}"
+engine = sq.create_engine(eng)
 
 Session = sessionmaker(bind=engine)
 session = Session()
