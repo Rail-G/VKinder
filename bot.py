@@ -43,9 +43,10 @@ class VKinder():
     # find_users
     def search_partner(self, city_id: tuple, user_sex: int, user_bdate: str) -> None:
         user_id_city = self.user_city()
-        search_result = self.vk_user.method('users.search', {'city': user_id_city[0], 'sex': user_sex, 'age_from': self.user_bdate()-3, 'age_to': self.user_bdate()+3})
+        user_id = self.vk_user.method('users.get')[0]['id']
+        search_result = self.vk_user.method('users.search', {'city': user_id_city[0], 'sex': self.user_sex(), 'age_from': self.user_bdate()-3, 'age_to': self.user_bdate()+3})
         if search_result.get('count') == 0:
-            return 'Нам очень жаль, что вы не смогли найти вашего партнёра(-шу) в городе {}'.format(user_id_city[1])
+            return self.bot_write(user_id, 'Нам очень жаль, что вы не смогли найти вашего партнёра(-шу) в городе {}'.format(user_id_city[1]))
         for i in search_result['items']:
             # BD INSERT users: id, vk_id, firstname, lastname, link
             pass
@@ -70,10 +71,10 @@ class VKinder():
                 if event.type == VkBotEventType.MESSAGE_NEW:
                     if event.object.message['text'] == 'Like':
                         self.vk_group.method('messages.send', {'user_id': user_id, 'random_id': 0, 'message': "Фотография добавлена в понравившиеся."})
-                        #DB Update photo like to 1
+                        #DB Update photo_likes to 1 ОДНУ ФУНКЦИЮ В КОТОРЫЙ ПАРАМЕТРОМ ДОАБВИТЬ 1 ИЛИ 0
                     elif event.object.message['text'] == 'Dislike':
                         self.vk_group.method('messages.send', {'user_id': user_id, 'random_id': 0, 'message': "Мы постараемся вам больше не показывать эту фотографию."})
-                        #DB Update photo like to 0
+                        #DB Update photo_likes to 0 ОДНУ ФУНКЦИЮ В КОТОРЫЙ ПАРАМЕТРОМ ДОАБВИТЬ 1 ИЛИ 0
                     break
     
     # DB_users
