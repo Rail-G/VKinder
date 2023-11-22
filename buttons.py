@@ -37,3 +37,8 @@ class Button:
         back = VkKeyboard(inline=False, one_time=True)
         back.add_button('Назад', color=VkKeyboardColor.PRIMARY)
         return back.get_keyboard()
+    
+    def delete_DB(self):
+        delete_db = VkKeyboard(inline=False, one_time=True)
+        delete_db.add_button('Удалить все данные!', color=VkKeyboardColor.NEGATIVE)
+        return delete_db.get_keyboard()
