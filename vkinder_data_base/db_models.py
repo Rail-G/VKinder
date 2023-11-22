@@ -1,19 +1,29 @@
 import sqlalchemy as sq
 
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
-from config import DIALECT, USERNAME, PASSWORD, HOST, DATABASE
+
 
 
 Base = declarative_base()
+
+
+class Clients(Base):
+    __tablename__ = 'clients'
+
+    client_id = sq.Column(sq.Integer, primary_key=True)
+    client_vk_id = sq.Column(sq.String)
+
 
 class Users(Base):
     __tablename__ = 'users'
 
     user_id = sq.Column(sq.Integer, primary_key=True)
-    user_vk = sq.Column(sq.String)
+    user_vk_id = sq.Column(sq.String)
     user_first_name = sq.Column(sq.String)
     user_last_name = sq.Column(sq.String)
     user_link = sq.Column(sq.String)
+    client_id = sq.Column(sq.Integer, sq.ForeignKey('clients.client_id'), nullable=False)
+    client = relationship('Clients', backref='users')
 
 
 class Photos(Base):
@@ -29,16 +39,18 @@ class Blocked(Base):
     __tablename__ = 'blocked'
 
     blocked_id = sq.Column(sq.Integer, primary_key=True)
-    user_id = sq.Column(sq.Integer, sq.ForeignKey('users.user_id'), nullable=False)
-    user = relationship('Users', backref='blocked')
+    user_vk_id = sq.Column(sq.String)
+    client_id = sq.Column(sq.Integer, sq.ForeignKey('clients.client_id'), nullable=False)
+    user = relationship('Clients', backref='blocked')
 
 
 class Favorites(Base):
     __tablename__ = 'favorites'
 
     favorite_id = sq.Column(sq.Integer, primary_key=True)
-    user_id = sq.Column(sq.Integer, sq.ForeignKey('users.user_id'), nullable=False)
-    user = relationship('Users', backref='favorites')
+    user_vk_id = sq.Column(sq.String)
+    client_id = sq.Column(sq.Integer, sq.ForeignKey('clients.client_id'), nullable=False)
+    user = relationship('Clients', backref='favorites')
 
 
 class LikedDisliked(Base):
@@ -46,10 +58,12 @@ class LikedDisliked(Base):
 
     like_dislike_id = sq.Column(sq.Integer, primary_key=True)
     reaction = sq.Column(sq.Integer)
-    user_id = sq.Column(sq.Integer, sq.ForeignKey('users.user_id'), nullable=False)
-    photo_id = sq.Column(sq.Integer, sq.ForeignKey('photos.photo_id'), nullable=False)
-    user = relationship('Users', uselist=False, backref='likesdislikes')
-    photo = relationship('Photos', uselist=False, backref='likesdislikes')
+    user_vk_id = sq.Column(sq.Integer, nullable=False)
+    photo_vk_id = sq.Column(sq.Integer, nullable=False)
+    favorite_id = sq.Column(sq.Integer, sq.ForeignKey('favorites.favorite_id'))
+    blocked_id = sq.Column(sq.Integer, sq.ForeignKey('blocked.blocked_id'))
+    favorite = relationship('Favorites', uselist=False, backref='likesdislikes')
+    blocked = relationship('Blocked', uselist=False, backref='likesdislikes')
 
 
 #Создание таблиц

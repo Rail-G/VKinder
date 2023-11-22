@@ -2,7 +2,7 @@ from config import DIALECT, USERNAME, PASSWORD, HOST, DATABASE
 import sqlalchemy as sq
 
 from sqlalchemy.orm import sessionmaker, scoped_session
-from vkinder_data_base.db_models import Users, Photos, Blocked, Favorites, LikedDisliked
+from vkinder_data_base.db_models import Clients, Users, Photos, Blocked, Favorites, LikedDisliked
 
 
 def connect_to_db():
@@ -30,6 +30,22 @@ def dbconnect(func):
 
     return _dbconnect
 
+
+#Проверка наличия клиента в таблице Clients
+def check_client(client_check_id: str):
+    session = Session()
+    checking_client = session.query(Clients).filter(Clients.client_id==client_check_id).first()
+    return checking_client is not None
+
+#Добавление нового клиента в таблицу Clients
+@dbconnect
+def add_client(client_vk_id: str):
+    session = Session
+    if not check_client(client_vk_id):
+        new_client = Clients(client_vk_id)
+        session.add(new_client)
+
+
 #Проверка пользователя в таблице Users
 def check_users(check_id: str):
     session = Session()
@@ -39,7 +55,7 @@ def check_users(check_id: str):
 
 #Добавление пользователя в список Users
 @dbconnect
-def add_user(user_info):
+def add_user(user_info: dict):
     session = Session()
     if not check_users(user_info['user_vk']):
         new_user = Users(**user_info)
@@ -48,25 +64,17 @@ def add_user(user_info):
 
 #Добавление id фото в таблицу Photo
 @dbconnect
-def add_photo(photo_id):
+def add_photo(photo_info: dict):
     session = Session()
-    user_photo = Photos(**photo_id)
+    user_photo = Photos(**photo_info)
     session.add(user_photo)
-
-
-#Обновление реакции на фото в таблице LikedDisliked
-@dbconnect
-def rection_update(update_reaction: int, user_id: int):
-    session = Session()
-    new_reaction = session.query(LikedDisliked).filter_by(user_id=user_id).update({'reaction': update_reaction})
-    session.commit()
 
 
 #Достаем vk_id из таблицы Users
 @dbconnect
-def get_user_id(user_id: str) -> type[Users] | None:
+def get_user_id(user_id: str):
     session = Session()
-    user = session.query(Users).filter(Users.user_vk == user_id).first()
+    user = session.query(Users).filter(Users.user_vk_id==user_id).first()
     return user
 
 
@@ -90,9 +98,9 @@ def add_user_to_favorites(user_info, matched_user_info):
 
 #Удаление из таблицы Favorites
 @dbconnect
-def delete_from_favorites(user_id: str):
+def delete_from_favorites(user_vk_id: str):
     session = Session()
-    session.query(Favorites).filter_by(favorite_user_id=user_id).delete()
+    session.query(Favorites).filter_by(user_vk_id=user_vk_id).delete()
 
 
 #Проверка на наличие в таблице Blocked
@@ -129,11 +137,17 @@ def all_favorites(user_id):
     return favorites_list
 
 
-@dbconnect
-def like_or_not(reaction: str):
-    session = Session()
-    react = LikedDisliked(reaction=reaction, user_id=Users.user_id, photo_id=Photos.photo_id)
-    session.add(react)
+# @dbconnect
+# def like_or_not(reaction: str):
+#     session = Session()
+#     react = LikedDisliked(reaction=reaction, user_vk_id=Users.user_vk_id, photo_id=photo_id)
+#     session.add(react)
 
+#Обновление реакции на фото в таблице LikedDisliked
+@dbconnect
+def rection_update(update_reaction: int, user_vk_id: int):
+    session = Session()
+    new_reaction = session.query(LikedDisliked).filter_by(user_vk_id=user_vk_id).update({'reaction': update_reaction})
+    session.commit()
 
 
