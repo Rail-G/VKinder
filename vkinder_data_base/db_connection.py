@@ -8,6 +8,7 @@ from vkinder_data_base.db_models import Users, Photos, Blocked, Favorites, Liked
 def connect_to_db():
     eng = f"{DIALECT}://{USERNAME}:{PASSWORD}@{HOST}/{DATABASE}"
     engine = sq.create_engine(eng)
+    return engine
 
 sessions = sessionmaker(bind=connect_to_db())
 Session = scoped_session(sessions)
@@ -18,19 +19,21 @@ def dbconnect(func):
     def _dbconnect(*args, **kwargs):
         session = Session()
         try:
-            func(*args, **kwargs)
+            result = func(*args, **kwargs)
             session.commit()
-        except:
+            return result
+        except Exception as e:
+            print(f'Ошибка {e}')
             session.rollback()
         finally:
             Session.remove()
 
-    return _dbconnect()
+    return _dbconnect
 
 #Проверка пользователя в таблице Users
 def check_users(check_id: str):
     session = Session()
-    checking_user = session.query(Users).filter_by(user_id=check_id).first()
+    checking_user = session.query(Users).filter(Users.user_vk==check_id).first()
     return checking_user is not None
 
 
@@ -38,7 +41,7 @@ def check_users(check_id: str):
 @dbconnect
 def add_user(user_info):
     session = Session()
-    if not check_users(user_info['user_id']):
+    if not check_users(user_info['user_vk']):
         new_user = Users(**user_info)
         session.add(new_user)
 
@@ -49,6 +52,22 @@ def add_photo(photo_id):
     session = Session()
     user_photo = Photos(**photo_id)
     session.add(user_photo)
+
+
+#Обновление реакции на фото в таблице LikedDisliked
+@dbconnect
+def rection_update(update_reaction: int, user_id: int):
+    session = Session()
+    new_reaction = session.query(LikedDisliked).filter_by(user_id=user_id).update({'reaction': update_reaction})
+    session.commit()
+
+
+#Достаем vk_id из таблицы Users
+@dbconnect
+def get_user_id(user_id: str) -> type[Users] | None:
+    session = Session()
+    user = session.query(Users).filter(Users.user_vk == user_id).first()
+    return user
 
 
 #Проверка на наличие в таблице Favorites
@@ -98,7 +117,7 @@ def add_to_blocked(user_info, matched_user_info):
 
 def all_favorites(user_id):
     session = Session()
-    users = session.query(Users).join(Favorites(Favorites.favorite_id == Users.user_id).filter(Favorites.user_id == user_id).all()
+    users = session.query(Users).join(Favorites(Favorites.favorite_id == Users.user_id).filter(Favorites.user_id == user_id)).all()
     favorites_list = []
     for user in users:
         favorites_list.append({'id': user.user_id,
@@ -108,5 +127,13 @@ def all_favorites(user_id):
                                })
 
     return favorites_list
+
+
+@dbconnect
+def like_or_not(reaction: str):
+    session = Session()
+    react = LikedDisliked(reaction=reaction, user_id=Users.user_id, photo_id=Photos.photo_id)
+    session.add(react)
+
 
 
