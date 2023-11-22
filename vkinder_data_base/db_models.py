@@ -38,7 +38,7 @@ class Favorites(Base):
 
     favorite_id = sq.Column(sq.Integer, primary_key=True)
     user_id = sq.Column(sq.Integer, sq.ForeignKey('users.user_id'), nullable=False)
-    user = relationship('Users', backref='blocked')
+    user = relationship('Users', backref='favorites')
 
 
 class LikedDisliked(Base):
