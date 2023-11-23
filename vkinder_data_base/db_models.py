@@ -26,6 +26,8 @@ class Users(Base):
     client = relationship('Clients', backref='users')
 
 
+
+
 class Photos(Base):
     __tablename__ = 'photos'
 
@@ -50,7 +52,7 @@ class Favorites(Base):
     favorite_id = sq.Column(sq.Integer, primary_key=True)
     user_vk_id = sq.Column(sq.String)
     client_id = sq.Column(sq.Integer, sq.ForeignKey('clients.client_id'), nullable=False)
-    user = relationship('Clients', backref='favorites')
+    client = relationship('Clients', backref='favorites')
 
 
 class LikedDisliked(Base):
@@ -58,8 +60,8 @@ class LikedDisliked(Base):
 
     like_dislike_id = sq.Column(sq.Integer, primary_key=True)
     reaction = sq.Column(sq.Integer)
-    user_vk_id = sq.Column(sq.Integer, nullable=False)
-    photo_vk_id = sq.Column(sq.Integer, nullable=False)
+    user_vk_id = sq.Column(sq.String, nullable=False)
+    photo_vk_id = sq.Column(sq.String, nullable=False)
     favorite_id = sq.Column(sq.Integer, sq.ForeignKey('favorites.favorite_id'))
     blocked_id = sq.Column(sq.Integer, sq.ForeignKey('blocked.blocked_id'))
     favorite = relationship('Favorites', uselist=False, backref='likesdislikes')

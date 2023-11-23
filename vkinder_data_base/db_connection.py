@@ -1,12 +1,16 @@
+import os
+
 from config import DIALECT, USERNAME, PASSWORD, HOST, DATABASE
 import sqlalchemy as sq
 
 from sqlalchemy.orm import sessionmaker, scoped_session
 from vkinder_data_base.db_models import Clients, Users, Photos, Blocked, Favorites, LikedDisliked
-
+from dotenv import load_dotenv
 
 def connect_to_db():
-    eng = f"{DIALECT}://{USERNAME}:{PASSWORD}@{HOST}/{DATABASE}"
+    # eng = f"{DIALECT}://{USERNAME}:{PASSWORD}@{HOST}/{DATABASE}"
+    load_dotenv()
+    eng = os.getenv('MY_DSN')
     engine = sq.create_engine(eng)
     return engine
 
@@ -40,16 +44,16 @@ def check_client(client_check_id: str):
 #Добавление нового клиента в таблицу Clients
 @dbconnect
 def add_client(client_vk_id: str):
-    session = Session
+    session = Session()
     if not check_client(client_vk_id):
-        new_client = Clients(client_vk_id)
+        new_client = Clients(client_vk_id=client_vk_id)
         session.add(new_client)
 
 
 #Проверка пользователя в таблице Users
 def check_users(check_id: str):
     session = Session()
-    checking_user = session.query(Users).filter(Users.user_vk==check_id).first()
+    checking_user = session.query(Users).filter(Users.user_vk_id==check_id).first()
     return checking_user is not None
 
 
@@ -57,7 +61,7 @@ def check_users(check_id: str):
 @dbconnect
 def add_user(user_info: dict):
     session = Session()
-    if not check_users(user_info['user_vk']):
+    if not check_users(user_info['user_vk_id']):
         new_user = Users(**user_info)
         session.add(new_user)
 
@@ -70,29 +74,19 @@ def add_photo(photo_info: dict):
     session.add(user_photo)
 
 
-#Достаем vk_id из таблицы Users
-@dbconnect
-def get_user_id(user_id: str):
-    session = Session()
-    user = session.query(Users).filter(Users.user_vk_id==user_id).first()
-    return user
-
-
 #Проверка на наличие в таблице Favorites
 def check_favorites(check_id: str):
     session = Session()
-    check_user = session.query(Favorites).filter_by(favorite_user_id=check_id).first()
+    check_user = session.query(Favorites).filter_by(user_vk_id=check_id).first()
     return check_user is not None
 
 
 #Добавление в таблицу Favorites
 @dbconnect
-def add_user_to_favorites(user_info, matched_user_info):
+def add_user_to_favorites(user_info: dict):
     session = Session()
-    if not check_users(matched_user_info['user_id']):
-        add_user(matched_user_info)
-    if not check_favorites(matched_user_info['user_id']):
-        new_favorite_user = Favorites(user_id=user_info['user_id'], favorite_user_id=matched_user_info['user_id'])
+    if not check_favorites(user_info['user_vk_id']):
+        new_favorite_user = Favorites(user_vk_id=user_info['user_vk_id'], client_id=user_info['client_id'])
         session.add(new_favorite_user)
 
 
@@ -106,26 +100,24 @@ def delete_from_favorites(user_vk_id: str):
 #Проверка на наличие в таблице Blocked
 def check_blocked(check_id: str):
     session = Session()
-    check_users = session.query(Blocked).filter_by(blocked_list_id=check_id).first()
+    check_users = session.query(Blocked).filter_by(user_vk_id=check_id).first()
     return check_users is not None
 
 
 #Добавление в таблицу Blocked
 @dbconnect
-def add_to_blocked(user_info, matched_user_info):
+def add_to_blocked(user_info: dict):
     session = Session()
-    if not check_users(matched_user_info['user_id']):
-        add_user(matched_user_info)
-    if check_favorites(matched_user_info['user_id']):
-        delete_from_favorites(matched_user_info['user_id'])
-    if not check_blocked(matched_user_info['user_id']):
-        new_blocked_user = Blocked(user_id=user_info['user_id'], blocked_list_id=matched_user_info['user_id'])
-        session.add(new_blocked_user)
+    if check_favorites(user_info['user_vk_id']):
+        delete_from_favorites(user_info['user_vk_id'])
+    if not check_blocked(user_info['user_vk_id']):
+        new_favorite_user = Blocked(user_vk_id=user_info['user_vk_id'], client_id=user_info['client_id'])
+        session.add(new_favorite_user)
 
 
-def all_favorites(user_id):
+def all_favorites(user_id: int) -> list:
     session = Session()
-    users = session.query(Users).join(Favorites(Favorites.favorite_id == Users.user_id).filter(Favorites.user_id == user_id)).all()
+    users = session.query(Users).join(Favorites(Favorites.favorite_id == Users.user_vk_id).filter(Favorites.user_id == user_id)).all()
     favorites_list = []
     for user in users:
         favorites_list.append({'id': user.user_id,
@@ -137,17 +129,16 @@ def all_favorites(user_id):
     return favorites_list
 
 
-# @dbconnect
-# def like_or_not(reaction: str):
-#     session = Session()
-#     react = LikedDisliked(reaction=reaction, user_vk_id=Users.user_vk_id, photo_id=photo_id)
-#     session.add(react)
-
-#Обновление реакции на фото в таблице LikedDisliked
 @dbconnect
-def rection_update(update_reaction: int, user_vk_id: int):
+def like_or_not(reaction: int, user_vk_id: str, photo_vk_id: str):
     session = Session()
-    new_reaction = session.query(LikedDisliked).filter_by(user_vk_id=user_vk_id).update({'reaction': update_reaction})
-    session.commit()
-
-
+    try:
+        photo_excists = session.query(LikedDisliked).filter_by(user_vk_id=user_vk_id, photo_vk_id=photo_vk_id).first()
+        if photo_excists:
+            photo_excists.reaction = reaction
+        else:
+            new_reaction = LikedDisliked(user_vk_id=user_vk_id, photo_vk_id=photo_vk_id, reaction=reaction)
+            session.add(new_reaction)
+    except Exception as e:
+        print(f'Ошибка добавления реакции: {e}')
+        session.rollback()
