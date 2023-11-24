@@ -66,6 +66,17 @@ def add_user(user_info: dict):
         session.add(new_user)
 
 
+@dbconnect
+def get_user(user_vk_id: str):
+    session = Session
+    users = session.query(Users).filter(Users.user_vk_id==user_vk_id).all()
+    if not users:
+        print(f'Такой пользователь не найден')
+    else:
+        for user in users:
+            print(user)
+
+
 #Добавление id фото в таблицу Photo
 @dbconnect
 def add_photo(photo_info: dict):
@@ -115,18 +126,14 @@ def add_to_blocked(user_info: dict):
         session.add(new_favorite_user)
 
 
-def all_favorites(user_id: int) -> list:
+def all_favorites(client_id: int):
     session = Session()
-    users = session.query(Users).join(Favorites(Favorites.favorite_id == Users.user_vk_id).filter(Favorites.user_id == user_id)).all()
-    favorites_list = []
-    for user in users:
-        favorites_list.append({'id': user.user_id,
-                               'first_name': user.user_first_name,
-                               'last_name': user.last_name,
-                               'user_vk_id': user.user_vk
-                               })
-
-    return favorites_list
+    users = session.query(Favorites).filter_by(client_id=client_id).all()
+    if not users:
+        print('У вас ещё нет избранных пользователей')
+    else:
+        for user in users:
+            print(user)
 
 
 @dbconnect

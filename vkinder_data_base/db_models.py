@@ -25,6 +25,9 @@ class Users(Base):
     client_id = sq.Column(sq.Integer, sq.ForeignKey('clients.client_id'), nullable=False)
     client = relationship('Clients', backref='users')
 
+    def __str__(self):
+        return f'Имя пользователя: {self.user_first_name}, {self.user_last_name}, VK: {self.user_vk_id}, Ссылка на страницу: {self.user_link}'
+
 
 
 
@@ -53,6 +56,11 @@ class Favorites(Base):
     user_vk_id = sq.Column(sq.String)
     client_id = sq.Column(sq.Integer, sq.ForeignKey('clients.client_id'), nullable=False)
     client = relationship('Clients', backref='favorites')
+
+
+    def __str__(self):
+        return f'{self.user_vk_id}'
+
 
 
 class LikedDisliked(Base):
