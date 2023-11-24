@@ -2,7 +2,7 @@ import os
 
 import sqlalchemy
 
-from vkinder_data_base.db_models import Users, Photos, Favorites, Blocked, LikedDisliked, create_tables
+from vkinder_data_base.db_models import Users, Favorites, Blocked, Likes, create_tables
 from dotenv import load_dotenv
 
 load_dotenv()
