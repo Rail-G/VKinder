@@ -11,28 +11,35 @@ class Clients(Base):
     __tablename__ = 'clients'
 
     client_id = sq.Column(sq.Integer, primary_key=True)
-    client_vk_id = sq.Column(sq.Integer)
+    client_vk_id = sq.Column(sq.Integer, unique=True)
+
+
+    def __int__(self):
+        return f'PK_client_id: {self.client_id}, vk_id: {self.client_vk_id}'
 
 
 class Users(Base):
     __tablename__ = 'users'
 
     user_id = sq.Column(sq.Integer, primary_key=True)
-    user_vk_id = sq.Column(sq.Integer)
+    user_vk_id = sq.Column(sq.Integer, unique=True)
     user_first_name = sq.Column(sq.String)
     user_last_name = sq.Column(sq.String)
-    user_link = sq.Column(sq.String)
     client_id = sq.Column(sq.Integer, sq.ForeignKey('clients.client_id'), nullable=False)
     client = relationship('Clients', backref='users')
 
     def __str__(self):
-        return f'Имя пользователя: {self.user_first_name} {self.user_last_name}, VK id: {self.user_vk_id}, Ссылка на страницу: {self.user_link}'
+        return f'Имя пользователя: {self.user_first_name} {self.user_last_name}'
+
+
+    def __int__(self):
+        return f'PK_user_id: {self.user_id}, vk_id: {self.user_vk_id}'
 
 
 class Blocked(Base):
     __tablename__ = 'blocked'
     blocked_id = sq.Column(sq.Integer, primary_key=True)
-    user_vk_id = sq.Column(sq.Integer)
+    user_vk_id = sq.Column(sq.Integer, unique=True)
     user_first_name = sq.Column(sq.String)
     user_last_name = sq.Column(sq.String)
     client_id = sq.Column(sq.Integer, sq.ForeignKey('clients.client_id'), nullable=False)
@@ -40,14 +47,17 @@ class Blocked(Base):
 
 
     def __str__(self):
-        return f'VK id: {self.user_vk_id}, Имя: {self.user_first_name} {self.user_last_name}'
+        return f'Имя: {self.user_first_name} {self.user_last_name}'
+
+    def __int__(self):
+        return f'PK_blocked_id: {self.blocked_id}, vk_id: {self.user_vk_id}'
 
 
 class Favorites(Base):
     __tablename__ = 'favorites'
 
     favorite_id = sq.Column(sq.Integer, primary_key=True)
-    user_vk_id = sq.Column(sq.Integer)
+    user_vk_id = sq.Column(sq.Integer, unique=True)
     user_first_name = sq.Column(sq.String)
     user_last_name = sq.Column(sq.String)
     client_id = sq.Column(sq.Integer, sq.ForeignKey('clients.client_id'), nullable=False)
@@ -55,7 +65,10 @@ class Favorites(Base):
 
 
     def __str__(self):
-        return f'VK id: {self.user_vk_id}, Имя: {self.user_first_name} {self.user_last_name}'
+        return f'Имя: {self.user_first_name} {self.user_last_name}'
+
+    def __int__(self):
+        return f'PK_favorite_id: {self.favorite_id}, vk_id: {self.user_vk_id}'
 
 
 
@@ -63,13 +76,13 @@ class Likes(Base):
     __tablename__ = 'likes'
 
     like_id = sq.Column(sq.Integer, primary_key=True)
-    photo_vk_id = sq.Column(sq.Integer, nullable=False)
-    favorite_id = sq.Column(sq.Integer, sq.ForeignKey('favorites.favorite_id'))
-    favorite = relationship('Favorites', uselist=False, backref='likes')
+    photo_vk_id = sq.Column(sq.Integer, nullable=False, unique=True)
+    client_id = sq.Column(sq.Integer, sq.ForeignKey('clients.client_id'))
+    client = relationship('Clients', uselist=False, backref='likes')
 
 
-    def __str__(self):
-        return f'Photo vk id: {self.photo_vk_id}'
+    def __int__(self):
+        return f'PK_like_id: {self.like_id}, Photo vk id: {self.photo_vk_id}'
 
 
 #Удаление таблиц
