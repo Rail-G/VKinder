@@ -42,6 +42,13 @@ def check_client(client_check_id: int):
     checking_client = session.query(Clients).filter(Clients.client_id==client_check_id).first()
     return checking_client is not None
 
+
+#Проверка PK клиента
+def client_pk_id(client_vk_id: int) -> None:
+    session = Session()
+    client_pk_id = session.query(Clients.client_id).filter(Clients.client_vk_id==client_vk_id).first()
+    return client_pk_id[0]
+
 #Добавление нового клиента в таблицу Clients
 @dbconnect
 def add_client(client_vk_id: int):
@@ -60,9 +67,10 @@ def check_users(check_id: str):
 
 #Добавление пользователя в список Users
 @dbconnect
-def add_user(user_info: dict, client_id: int):
+def add_user(user_info: dict, client_vk_id: int):
     session = Session()
     if not check_users(user_info['user_vk_id']):
+        client_id = client_pk_id(client_vk_id)
         new_user = Users(**user_info, client_id=client_id)
         session.add(new_user)
 
@@ -81,14 +89,14 @@ def search():
 
 #Получение инфо пользователя по его vk_id
 @dbconnect
-def get_user(user_id: int):
+def get_user(pk_user: int):
     session = Session
-    users = session.query(Users).filter(Users.user_id==user_id).all()
+    users = session.query(Users).filter(Users.user_id==pk_user).all()
     if not users:
         print(f'Такой пользователь не найден')
     else:
         for user in users:
-            print(user)
+            print(f'Имя пользователя {user.user_first_name, user.user_last_name}, pk_user: {user.user_id}, user_vk_id: {user.user_vk_id}')
 
 
 #Проверка на наличие в таблице Favorites
@@ -100,9 +108,10 @@ def check_favorites(check_id: int):
 
 #Добавление в таблицу Favorites
 @dbconnect
-def add_user_to_favorites(user_info: dict, client_id: int):
+def add_user_to_favorites(user_info: dict, client_vk_id: int):
     session = Session()
     if not check_favorites(user_info['user_vk_id']):
+        client_id = client_pk_id(client_vk_id)
         new_favorite_user = Favorites(user_vk_id=user_info['user_vk_id'], user_first_name=user_info['user_first_name'], user_last_name=user_info['user_last_name'], client_id=client_id)
         session.add(new_favorite_user)
 
@@ -115,8 +124,9 @@ def delete_from_favorites(user_vk_id: int):
 
 
 #Вывод всех пользователей из избранного
-def all_favorites(client_id: int):
+def all_favorites(client_vk_id: int):
     session = Session()
+    client_id = client_pk_id(client_vk_id)
     users = session.query(Favorites).filter_by(client_id=client_id).all()
     if not users:
         print('У вас ещё нет избранных пользователей')
@@ -127,9 +137,10 @@ def all_favorites(client_id: int):
 
 #Добавление фото в лайкнутые
 @dbconnect
-def add_liked_photos(photo_vk_id: int, favorite_id: int):
+def add_liked_photos(photo_vk_id: int, client_vk_id: int):
     session = Session
-    like = Likes(photo_vk_id=photo_vk_id, favorite_id=favorite_id)
+    client_id = client_pk_id(client_vk_id)
+    like = Likes(photo_vk_id=photo_vk_id, client_id=client_id)
     session.add(like)
 
 
@@ -142,11 +153,12 @@ def del_liked_photo(photo_vk_id: int):
 
 #Вывод всех понравившихся фотографий
 @dbconnect
-def show_liked_photos(user_id: int):
+def show_liked_photos(client_vk_id: int):
     session = Session
-    photos = session.query(Likes, Favorites).join(Favorites, Likes.favorite_id==Favorites.favorite_id).filter(Favorites.user_vk_id==user_id).all()
+    client_id = client_pk_id(client_vk_id)
+    photos = session.query(Likes).filter_by(client_id=client_id).all()
     for photo in photos:
-        print(photo)
+        print(f'photo_vk_id: {int(photo.photo_vk_id)}, client_id: {int(photo.client_id)}')
 
 
 #Проверка на наличие в таблице Blocked
@@ -158,19 +170,21 @@ def check_blocked(check_id: int):
 
 #Добавление в таблицу Blocked
 @dbconnect
-def add_to_blocked(user_info: dict, client_id: int):
+def add_to_blocked(user_info: dict, client_vk_id: int):
     session = Session()
     if check_favorites(user_info['user_vk_id']):
         delete_from_favorites(user_info['user_vk_id'])
     if not check_blocked(user_info['user_vk_id']):
+        client_id = client_pk_id(client_vk_id)
         new_blocked_user = Blocked(user_vk_id=user_info['user_vk_id'], user_first_name=user_info['user_first_name'], user_last_name=user_info['user_last_name'], client_id=client_id)
         session.add(new_blocked_user)
 
 
 #Вывод всех заблокированных пользователей
 @dbconnect
-def all_blocked(client_id: int):
+def all_blocked(client_vk_id: int):
     session = Session
+    client_id = client_pk_id(client_vk_id)
     blocked_users = session.query(Blocked).filter_by(client_id=client_id).all()
     if not blocked_users:
         print('Ваш список заблокированных пользователей пуст')
