@@ -60,10 +60,10 @@ def check_users(check_id: str):
 
 #Добавление пользователя в список Users
 @dbconnect
-def add_user(user_info: dict):
+def add_user(user_info: dict, client_id: int):
     session = Session()
     if not check_users(user_info['user_vk_id']):
-        new_user = Users(**user_info)
+        new_user = Users(**user_info, client_id=client_id)
         session.add(new_user)
 
 
@@ -100,10 +100,10 @@ def check_favorites(check_id: int):
 
 #Добавление в таблицу Favorites
 @dbconnect
-def add_user_to_favorites(user_info: dict):
+def add_user_to_favorites(user_info: dict, client_id: int):
     session = Session()
     if not check_favorites(user_info['user_vk_id']):
-        new_favorite_user = Favorites(user_vk_id=user_info['user_vk_id'], user_first_name=user_info['user_first_name'], user_last_name=user_info['user_last_name'], client_id=user_info['client_id'])
+        new_favorite_user = Favorites(user_vk_id=user_info['user_vk_id'], user_first_name=user_info['user_first_name'], user_last_name=user_info['user_last_name'], client_id=client_id)
         session.add(new_favorite_user)
 
 
@@ -158,12 +158,12 @@ def check_blocked(check_id: int):
 
 #Добавление в таблицу Blocked
 @dbconnect
-def add_to_blocked(user_info: dict):
+def add_to_blocked(user_info: dict, client_id: int):
     session = Session()
     if check_favorites(user_info['user_vk_id']):
         delete_from_favorites(user_info['user_vk_id'])
     if not check_blocked(user_info['user_vk_id']):
-        new_blocked_user = Blocked(user_vk_id=user_info['user_vk_id'], user_first_name=user_info['user_first_name'], user_last_name=user_info['user_last_name'], client_id=user_info['client_id'])
+        new_blocked_user = Blocked(user_vk_id=user_info['user_vk_id'], user_first_name=user_info['user_first_name'], user_last_name=user_info['user_last_name'], client_id=client_id)
         session.add(new_blocked_user)
 
 
