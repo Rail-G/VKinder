@@ -45,7 +45,6 @@ info = [
 # db.delete_from_favorites(1)
 # for user in info:
 #     db.add_to_blocked(user, 1)
-
 # db.all_blocked(1)
 # db.delete_from_blocked(1)
 

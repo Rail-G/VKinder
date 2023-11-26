@@ -91,13 +91,12 @@ def search():
 @dbconnect
 def get_user(pk_user: int):
     session = Session
-    users = session.query(Users).filter(Users.user_id==pk_user).all()
+    users = session.query(Users.user_id, Users.user_vk_id, Users.user_first_name, Users.user_last_name).filter(Users.user_id==pk_user).all()
     if not users:
         print(f'Такой пользователь не найден')
     else:
         for user in users:
-            print(f'Имя пользователя {user.user_first_name, user.user_last_name}, pk_user: {user.user_id}, user_vk_id: {user.user_vk_id}')
-
+            print(user)
 
 #Проверка на наличие в таблице Favorites
 def check_favorites(check_id: int):
@@ -127,12 +126,8 @@ def delete_from_favorites(user_vk_id: int):
 def all_favorites(client_vk_id: int):
     session = Session()
     client_id = client_pk_id(client_vk_id)
-    users = session.query(Favorites).filter_by(client_id=client_id).all()
-    if not users:
-        print('У вас ещё нет избранных пользователей')
-    else:
-        for user in users:
-            print(user)
+    users = session.query(Favorites.user_vk_id, Favorites.user_first_name, Favorites.user_last_name).filter_by(client_id=client_id).all()
+    print(users)
 
 
 #Добавление фото в лайкнутые
@@ -156,10 +151,8 @@ def del_liked_photo(photo_vk_id: int):
 def show_liked_photos(client_vk_id: int):
     session = Session
     client_id = client_pk_id(client_vk_id)
-    photos = session.query(Likes).filter_by(client_id=client_id).all()
-    for photo in photos:
-        print(f'photo_vk_id: {int(photo.photo_vk_id)}, client_id: {int(photo.client_id)}')
-
+    photos = session.query(Likes.photo_vk_id, Likes.client_id).filter_by(client_id=client_id).all()
+    print(photos)
 
 #Проверка на наличие в таблице Blocked
 def check_blocked(check_id: int):
@@ -185,12 +178,8 @@ def add_to_blocked(user_info: dict, client_vk_id: int):
 def all_blocked(client_vk_id: int):
     session = Session
     client_id = client_pk_id(client_vk_id)
-    blocked_users = session.query(Blocked).filter_by(client_id=client_id).all()
-    if not blocked_users:
-        print('Ваш список заблокированных пользователей пуст')
-    else:
-        for user in blocked_users:
-            print(user)
+    blocked_users = session.query(Blocked.user_vk_id, Blocked.user_first_name, Blocked.user_last_name).filter_by(client_id=client_id).all()
+    print(blocked_users)
 
 
 #Удаление из таблицы Blocked
