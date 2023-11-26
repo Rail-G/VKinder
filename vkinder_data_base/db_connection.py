@@ -5,23 +5,26 @@ import sqlalchemy as sq
 
 from sqlalchemy.orm import sessionmaker, scoped_session
 from vkinder_data_base.db_models import Clients, Users, Blocked, Favorites, Likes
+from vkinder_data_base.db_models import create_tables
 from dotenv import load_dotenv
 
 
-def connect_to_db():
-    # eng = f"{DIALECT}://{USERNAME}:{PASSWORD}@{HOST}/{DATABASE}"
-    load_dotenv()
-    eng = os.getenv('MY_DSN')
-    engine = sq.create_engine(eng)
-    return engine
+eng = f"{DIALECT}://{USERNAME}:{PASSWORD}@{HOST}/{DATABASE}"
+    # load_dotenv()
+    # eng = os.getenv('MY_DSN')
+engine = sq.create_engine(eng)
 
-sessions = sessionmaker(bind=connect_to_db())
+
+sessions = sessionmaker(bind=engine)
 Session = scoped_session(sessions)
-
+def meh():
+    create_tables(engine)
 
 #Декоратор для sessionmaker
 def dbconnect(func):
     def _dbconnect(*args, **kwargs):
+        # sessions = sessionmaker(bind=connect_to_db())
+        # Session = scoped_session(sessions)
         session = Session()
         try:
             result = func(*args, **kwargs)
@@ -47,6 +50,7 @@ def check_client(client_check_id: int):
 def client_pk_id(client_vk_id: int) -> None:
     session = Session()
     client_pk_id = session.query(Clients.client_id).filter(Clients.client_vk_id==client_vk_id).first()
+    session.add(client_pk_id)
     return client_pk_id[0]
 
 #Добавление нового клиента в таблицу Clients
@@ -77,26 +81,24 @@ def add_user(user_info: dict, client_vk_id: int):
 
 #Дропаем таблицу users
 @dbconnect
-def drop_users():
+def drop_users(client_vk_id):
     session = Session
-    session.query(Users).delete()
+    client_id = client_pk_id(client_vk_id)
+    session.query(Users).filter(Users.client_id==client_id).delete()
 
 
-#Функция нового поиска
-def search():
-    drop_users()
+# #Функция нового поиска
+# def search():
+#     drop_users()
 
 
 #Получение инфо пользователя по его vk_id
 @dbconnect
 def get_user(pk_user: int):
     session = Session
-    users = session.query(Users.user_id, Users.user_vk_id, Users.user_first_name, Users.user_last_name).filter(Users.user_id==pk_user).all()
-    if not users:
-        print(f'Такой пользователь не найден')
-    else:
-        for user in users:
-            print(user)
+    users = session.query(Users.user_vk_id, Users.user_first_name, Users.user_last_name).filter(Users.user_id==pk_user).first()
+    return users
+
 
 #Проверка на наличие в таблице Favorites
 def check_favorites(check_id: int):
@@ -121,13 +123,13 @@ def delete_from_favorites(user_vk_id: int):
     session = Session()
     session.query(Favorites).filter_by(user_vk_id=user_vk_id).delete()
 
-
 #Вывод всех пользователей из избранного
+@dbconnect
 def all_favorites(client_vk_id: int):
     session = Session()
     client_id = client_pk_id(client_vk_id)
     users = session.query(Favorites.user_vk_id, Favorites.user_first_name, Favorites.user_last_name).filter_by(client_id=client_id).all()
-    print(users)
+    return users
 
 
 #Добавление фото в лайкнутые
@@ -151,8 +153,8 @@ def del_liked_photo(photo_vk_id: int):
 def show_liked_photos(client_vk_id: int):
     session = Session
     client_id = client_pk_id(client_vk_id)
-    photos = session.query(Likes.photo_vk_id, Likes.client_id).filter_by(client_id=client_id).all()
-    print(photos)
+    photos = session.query(Likes.photo_vk_id).filter_by(client_id=client_id).all()
+    return photos
 
 #Проверка на наличие в таблице Blocked
 def check_blocked(check_id: int):
@@ -176,10 +178,10 @@ def add_to_blocked(user_info: dict, client_vk_id: int):
 #Вывод всех заблокированных пользователей
 @dbconnect
 def all_blocked(client_vk_id: int):
-    session = Session
+    session = Session()
     client_id = client_pk_id(client_vk_id)
     blocked_users = session.query(Blocked.user_vk_id, Blocked.user_first_name, Blocked.user_last_name).filter_by(client_id=client_id).all()
-    print(blocked_users)
+    return blocked_users
 
 
 #Удаление из таблицы Blocked
@@ -188,3 +190,8 @@ def delete_from_blocked(user_vk_id: int):
     session = Session()
     session.query(Blocked).filter_by(user_vk_id=user_vk_id).delete()
 
+
+def delete_all(client_vk_id):
+    client_id = client_pk_id(client_vk_id)
+    session = Session()
+    session.query(Users, Likes, Blocked, Favorites).filter_by(client_id=client_id).delete()
