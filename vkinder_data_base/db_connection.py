@@ -8,23 +8,20 @@ from vkinder_data_base.db_models import Clients, Users, Blocked, Favorites, Like
 from vkinder_data_base.db_models import create_tables
 from dotenv import load_dotenv
 
+def connect_to_db():
+    eng = f"{DIALECT}://{USERNAME}:{PASSWORD}@{HOST}/{DATABASE}"
+    engine = sq.create_engine(eng)
+    return engine
 
-eng = f"{DIALECT}://{USERNAME}:{PASSWORD}@{HOST}/{DATABASE}"
-    # load_dotenv()
-    # eng = os.getenv('MY_DSN')
-engine = sq.create_engine(eng)
-
-
-sessions = sessionmaker(bind=engine)
+sessions = sessionmaker(bind=connect_to_db())
 Session = scoped_session(sessions)
-def meh():
-    create_tables(engine)
+
+def create_table():
+    create_tables(connect_to_db())
 
 #Декоратор для sessionmaker
 def dbconnect(func):
     def _dbconnect(*args, **kwargs):
-        # sessions = sessionmaker(bind=connect_to_db())
-        # Session = scoped_session(sessions)
         session = Session()
         try:
             result = func(*args, **kwargs)
@@ -50,7 +47,6 @@ def check_client(client_check_id: int):
 def client_pk_id(client_vk_id: int) -> None:
     session = Session()
     client_pk_id = session.query(Clients.client_id).filter(Clients.client_vk_id==client_vk_id).first()
-    session.add(client_pk_id)
     return client_pk_id[0]
 
 #Добавление нового клиента в таблицу Clients
@@ -194,4 +190,7 @@ def delete_from_blocked(user_vk_id: int):
 def delete_all(client_vk_id):
     client_id = client_pk_id(client_vk_id)
     session = Session()
-    session.query(Users, Likes, Blocked, Favorites).filter_by(client_id=client_id).delete()
+    session.query(Users).filter_by(client_id=client_id).delete()
+    session.query(Likes).filter_by(client_id=client_id).delete()
+    session.query(Blocked).filter_by(client_id=client_id).delete()
+    session.query(Favorites).filter_by(client_id=client_id).delete()

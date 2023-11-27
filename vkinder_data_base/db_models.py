@@ -85,11 +85,12 @@ class Likes(Base):
         return f'PK_like_id: {self.like_id}, Photo vk id: {self.photo_vk_id}'
 
 
-#Удаление таблиц
-def drop_tables(engine):
-    Base.metadata.drop_all(engine)
+# #Удаление таблиц
+# def drop_tables(engine):
+#     Base.metadata.drop_all(engine)
 
 
 #Создание таблиц ()
 def create_tables(engine):
+    Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)

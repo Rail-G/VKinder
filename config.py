@@ -2,6 +2,8 @@ GROUP_TOKEN = ''
 USER_TOKEN = ''
 GROUP_ID = ''
 
+COUNT = ''
+
 DIALECT = ''
 USERNAME = ''
 PASSWORD = ''

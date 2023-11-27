@@ -8,6 +8,7 @@ class Button:
     def start(self) -> VkKeyboard:
         start_key = VkKeyboard(inline=False, one_time=True)
         start_key.add_button('Начать поиск', color=VkKeyboardColor.POSITIVE)
+        start_key.add_button('Вернуться к поиску', color=VkKeyboardColor.POSITIVE)
         start_key.add_line()
         start_key.add_button('Показать понравившиеся фотографии', color=VkKeyboardColor.POSITIVE)
         start_key.add_line()
@@ -24,6 +25,7 @@ class Button:
         next_key.add_button('Добавить в чёрный список', color=VkKeyboardColor.NEGATIVE)
         next_key.add_line()
         next_key.add_button('Добавить в избранные', color=VkKeyboardColor.PRIMARY)
+        next_key.add_button('В главное меню', color=VkKeyboardColor.PRIMARY)
         return next_key.get_keyboard()
     
     def delete_black_list(self) -> VkKeyboard:
@@ -52,5 +54,11 @@ class Button:
     
     def back_to_menu(self):
         back = VkKeyboard(inline=False, one_time=True)
-        back.add_button('Назад в меню.', color=VkKeyboardColor.PRIMARY)
+        back.add_button('В главное меню', color=VkKeyboardColor.PRIMARY)
         return back.get_keyboard()
+        
+    def like_dislike(self):
+        keyboard = VkKeyboard(inline=True) 
+        keyboard.add_button('Like', color=VkKeyboardColor.SECONDARY)
+        keyboard.add_button('Dislike', color=VkKeyboardColor.SECONDARY)
+        return keyboard.get_keyboard()
