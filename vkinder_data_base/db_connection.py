@@ -9,7 +9,8 @@ from vkinder_data_base.db_models import create_tables
 from dotenv import load_dotenv
 
 def connect_to_db():
-    eng = f"{DIALECT}://{USERNAME}:{PASSWORD}@{HOST}/{DATABASE}"
+    load_dotenv()
+    eng = os.getenv('MY_DSN')
     engine = sq.create_engine(eng)
     return engine
 

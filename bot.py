@@ -17,7 +17,7 @@ class VKinder():
     def bot_write(self, user_id: int, message: str, keyboard=None) -> None:
         self.vk_group.method('messages.send', {'user_id': user_id, 'random_id': 0, 'message': message, 'keyboard': keyboard})
 
-    def user_name(self) -> int:
+    def user_name(self) -> str:
         user_name = self.vk_user.method('users.get')[0]['first_name']
         return user_name
 
@@ -38,7 +38,7 @@ class VKinder():
         age = self.calculate_age(user_bdate)
         return age
     
-    def user_city(self, user_id: int) -> str:
+    def user_city(self, user_id: int) -> tuple:
         user_city = self.vk_user.method('users.get', {'fields': 'city'})[0]
         if user_city.get('city') == None:
             self.bot_write(user_id, 'Пожалуйста введите ваш город: ')
@@ -88,8 +88,8 @@ class VKinder():
         photo_id = [i['id'] for i in popular_photos]
         return photo_id[:3]
 
-    def send_photos(self, user_id: int, number: int) -> str:
-        func = self.get_user(number)
+    def send_photos(self, user_id: int, pk_number: int) -> None:
+        func = self.get_user(pk_number)
         photo_id = self.photo_id(func['user_vk_id'])
         for i in photo_id:
             self.vk_group.method('messages.send', {'user_id': user_id, 'random_id': 0, 'attachment': f'photo{func["user_vk_id"]}_{i}', 'keyboard': Button().like_dislike()})
@@ -113,7 +113,7 @@ class VKinder():
             else:
                 return age
             
-    def delete_favorites(self, user_id: int):
+    def delete_favorites(self, user_id: int) -> None:
         id = all_favorites(user_id)
         if id == []:
             self.bot_write(user_id, 'А тут пусто')
@@ -131,7 +131,7 @@ class VKinder():
                         delete_from_favorites(favorite_id)
                         break
 
-    def delete_black_list(self, user_id: int):
+    def delete_black_list(self, user_id: int) -> None:
         id = all_blocked(user_id)
         if id == []:
             self.bot_write(user_id, 'А тут пусто')
@@ -149,7 +149,7 @@ class VKinder():
                         delete_from_blocked(black_list_id)
                         break
 
-    def delete_photo(self, user_id: int, pk_number: int):
+    def delete_photo(self, user_id: int, pk_number: int) -> None:
         id = show_liked_photos(user_id)
         if id == []:
             self.bot_write(user_id, 'А тут пусто')
@@ -168,12 +168,12 @@ class VKinder():
                         delete_from_favorites(photo_id)
                         break
                     
-    def get_user(self, pk_user):
-        data = get_user(pk_user)
+    def get_user(self, pk_number: int) -> dict:
+        data = get_user(pk_number)
         user_data = {'user_vk_id': data[0], 'user_first_name': data[1], 'user_last_name': data[2]}
         return user_data
     
-    def show_favorite(self, user_id):
+    def show_favorite(self, user_id: int) -> None:
         data = all_favorites(user_id)
         if data == []:
             self.bot_write(user_id, 'Тут никого нет (╥﹏╥)')
@@ -181,7 +181,7 @@ class VKinder():
             for i in data:
                 self.bot_write(user_id, f"vk.com/id{i[0]} {i[1]} {i[2]}")
 
-    def show_blocked(self, user_id):
+    def show_blocked(self, user_id: int) -> None:
         data = all_blocked(user_id)
         if data == []:
             self.bot_write(user_id, 'Тут никого нет (╥﹏╥)')
@@ -189,7 +189,7 @@ class VKinder():
             for i in data:
                 self.bot_write(user_id, f"vk.com/id{i[0]} {i[1]} {i[2]}")
 
-    def show_liked_photo(self, user_id, pk_number):
+    def show_liked_photo(self, user_id: int, pk_number: int) -> None:
         data = show_liked_photos(user_id)
         if data == []:
             self.bot_write(user_id, 'Тут ничего нет (╥﹏╥)')
