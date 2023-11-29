@@ -3,7 +3,7 @@ from datetime import datetime
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from vk_api.bot_longpoll import VkBotEventType, VkBotLongPoll
 from config import USER_TOKEN, GROUP_TOKEN, GROUP_ID, COUNT
-from vkinder_data_base.db_connection import all_favorites, delete_from_favorites, delete_from_blocked, all_blocked, show_liked_photos, get_user, add_liked_photos, add_user
+from vkinder_data_base.db_connection import all_favorites, delete_from_favorites, delete_from_blocked, all_blocked, show_liked_photos, get_user, add_liked_photos, add_user, del_liked_photo
 from buttons import Button
 
 class VKinder():
@@ -79,6 +79,8 @@ class VKinder():
             self.bot_write(user_id, 'Нам очень жаль, что вы не смогли найти вашего партнёра(-шу) в городе {}. Пожалуйста, начните поиск заного.'.format(user_tuple_city[1]))
             return False
         for i in search_result['items']:
+            if i.get('is_closed') == True:
+                continue
             items = {'user_vk_id': i['id'], 'user_first_name': i['first_name'], 'user_last_name': i['last_name']}
             add_user(items, user_id)
 
@@ -165,7 +167,7 @@ class VKinder():
                     if ph_id.isdigit():
                         photo_id = int(ph_id)
                         self.bot_write(user_id, f'Фото удален из понравившихся')
-                        delete_from_favorites(photo_id)
+                        del_liked_photo(photo_id)
                         break
                     
     def get_user(self, pk_number: int) -> dict:
