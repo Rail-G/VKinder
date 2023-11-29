@@ -130,10 +130,10 @@ def all_favorites(client_vk_id: int):
 
 #Добавление фото в лайкнутые
 @dbconnect
-def add_liked_photos(photo_vk_id: int, client_vk_id: int):
+def add_liked_photos(photo_vk_id: int, user_vk_id: int, client_vk_id: int):
     session = Session
     client_id = client_pk_id(client_vk_id)
-    like = Likes(photo_vk_id=photo_vk_id, client_id=client_id)
+    like = Likes(photo_vk_id=photo_vk_id, user_vk_id=user_vk_id, client_id=client_id)
     session.add(like)
 
 
@@ -149,7 +149,7 @@ def del_liked_photo(photo_vk_id: int):
 def show_liked_photos(client_vk_id: int):
     session = Session
     client_id = client_pk_id(client_vk_id)
-    photos = session.query(Likes.photo_vk_id).filter_by(client_id=client_id).all()
+    photos = session.query(Likes.photo_vk_id, Likes.user_vk_id).filter_by(client_id=client_id).all()
     return photos
 
 #Проверка на наличие в таблице Blocked
