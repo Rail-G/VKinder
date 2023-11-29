@@ -23,7 +23,8 @@ for event in VKinder().bot_longpoll.listen():
                 g = bot.search_partner(user_id)
                 if g == False:
                     bot.bot_write(user_id, 'Вернитесь в меню, чтобы продолжить.', Button().back_to_menu())
-                bot.bot_write(user_id, 'Мы закончили поиск! Пожалуйста, нажмите \'Далее\' чтобы ознакомиться результатом! Остальные кнопки надеюсь не нуждаются в объяснении.', Button().next())
+                else:
+                    bot.bot_write(user_id, 'Мы закончили поиск! Пожалуйста, нажмите \'Далее\' чтобы ознакомиться результатом! Остальные кнопки надеюсь не нуждаются в объяснении.', Button().next())
             elif text == 'Начать все сначало':
                 bot.bot_write(user_id, 'Это приведет к полному удалению всех данных!', Button().yes_or_no())
             elif text == 'Удалить все данные!':
