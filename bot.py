@@ -55,8 +55,8 @@ class VKinder():
                             if user_city_title.lower() == city.lower():
                                 user_city_id = citys_db['items'][0].get('id')
                                 return (user_city_id, user_city_title)
-        user_city_id = user_city.get('id')
-        user_city_title = user_city.get('title')
+        user_city_id = user_city.get('city').get('id')
+        user_city_title = user_city.get('city').get('title')
         return (user_city_id, user_city_title)
     
     def user_sex(self) -> int:
