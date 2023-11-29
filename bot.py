@@ -24,7 +24,7 @@ class VKinder():
     def user_bdate(self, user_id: int) -> int:
         user_info = self.vk_user.method('users.get', {'fields': 'bdate'})
         user_bdate = user_info[0].get('bdate')
-        if user_bdate == None:
+        if user_bdate == None or len(user_bdate.split('.')) < 3:
             self.bot_write(user_id, 'Пожалуйста напишите, сколько вам лет?')
             for event in self.bot_longpoll.listen():
                 if event.type == VkBotEventType.MESSAGE_NEW:
@@ -76,7 +76,7 @@ class VKinder():
                 break
         search_result = self.vk_user.method('users.search', {'city': user_tuple_city[0], 'count': int(COUNT), 'sex': self.user_sex(), 'age_from': self.user_bdate(user_id)-age_from, 'age_to': self.user_bdate(user_id)+age_to})
         if search_result.get('count') == 0:
-            self.bot_write(user_id, 'Нам очень жаль, что вы не смогли найти вашего партнёра(-шу) в городе {}. Пожалуйста, начните поиск заного.'.format(user_tuple_city[1]))
+            self.bot_write(user_id, 'Нам очень жаль, что вы не смогли найти вашего партнёра(-шу) в городе {}. Пожалуйста, начните поиск заного и поменяйте город.'.format(user_tuple_city[1]))
             return False
         for i in search_result['items']:
             if i.get('is_closed') == True:
@@ -100,7 +100,7 @@ class VKinder():
                     peer_id = event.object.message['peer_id']
                     if event.object.message['text'] == 'Like' and user_id == peer_id:
                         self.bot_write(user_id, "Фотография добавлена в понравившиеся.")
-                        add_liked_photos(i, user_id)
+                        add_liked_photos(i, func["user_vk_id"], user_id)
                     break
     
     def calculate_age(self, date: str) -> int:
@@ -156,11 +156,10 @@ class VKinder():
         if id == []:
             self.bot_write(user_id, 'А тут пусто')
         else:
-            owner_id = self.get_user(pk_number)['user_vk_id']
             for i in id:
                 favorite = VkKeyboard(inline=True)
                 favorite.add_button(f"{i[0]}", color=VkKeyboardColor.NEGATIVE)
-                self.vk_group.method('messages.send', {'user_id': user_id, 'random_id': 0, 'attachment': f'photo{owner_id}_{i[0]}', 'keyboard': favorite.get_keyboard()})
+                self.vk_group.method('messages.send', {'user_id': user_id, 'random_id': 0, 'attachment': f'photo{i[1]}_{i[0]}', 'keyboard': favorite.get_keyboard()})
             for event in self.bot_longpoll.listen():
                 if event.type == VkBotEventType.MESSAGE_NEW:
                     ph_id = event.object.message['text']
@@ -196,6 +195,5 @@ class VKinder():
         if data == []:
             self.bot_write(user_id, 'Тут ничего нет (╥﹏╥)')
         else:
-            owner_id = self.get_user(pk_number)['user_vk_id']
             for i in data:
-                self.vk_group.method('messages.send', {'user_id': user_id, 'random_id': 0, 'attachment': f'photo{owner_id}_{i[0]}'})
+                self.vk_group.method('messages.send', {'user_id': user_id, 'random_id': 0, 'attachment': f'photo{i[1]}_{i[0]}'})
