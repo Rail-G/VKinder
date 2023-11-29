@@ -77,6 +77,7 @@ class Likes(Base):
 
     like_id = sq.Column(sq.Integer, primary_key=True)
     photo_vk_id = sq.Column(sq.Integer, nullable=False, unique=True)
+    user_vk_id = sq.Column(sq.Integer, nullable=False)
     client_id = sq.Column(sq.Integer, sq.ForeignKey('clients.client_id'))
     client = relationship('Clients', uselist=False, backref='likes')
 
