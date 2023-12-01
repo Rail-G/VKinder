@@ -2,7 +2,7 @@ from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from vk_api.bot_longpoll import VkBotEventType
 from bot import VKinder
 from buttons import Button
-from vkinder_data_base.db_connection import create_table, add_client, drop_users, delete_all, add_to_blocked, add_user_to_favorites
+from vkinder_data_base.db_connection import create_table, add_client, drop_users, delete_all, add_to_blocked, add_user_to_favorites, alter_sequence
 
 
 create_table()
@@ -18,7 +18,9 @@ for event in VKinder().bot_longpoll.listen():
             add_client(user_id)
         if peer_id == user_id:
             if text == 'Начать поиск':
+                pk_number = 0
                 drop_users(user_id)
+                alter_sequence()
                 bot.bot_write(user_id, 'Отлично. Изучим ваши данные и найдем вам партнера(-шу).')
                 g = bot.search_partner(user_id)
                 if g == False:
@@ -34,19 +36,28 @@ for event in VKinder().bot_longpoll.listen():
             elif text == 'Далее':
                 pk_number += 1
                 data = bot.get_user(pk_number)
-                bot.bot_write(user_id, f"vk.com/id{data['user_vk_id']} {data['user_first_name']} {data['user_last_name']}")
-                bot.send_photos(user_id, pk_number)
+                if data == False:
+                    bot.bot_write(user_id, 'Этот пользователь в черном списке или закончился поиск!')
+                else:
+                    bot.bot_write(user_id, f"vk.com/id{data['user_vk_id']} {data['user_first_name']} {data['user_last_name']}")
+                    bot.send_photos(user_id, pk_number)
                 bot.bot_write(user_id, 'Идем дальше?', Button().next())
             elif text == 'Нет, я передумал':
                 bot.bot_write(user_id, 'Я вас понял.', Button().next())
             elif text == 'Добавить в чёрный список':
                 data = bot.get_user(pk_number)
-                add_to_blocked(data, user_id)
-                bot.bot_write(user_id, f'Пользователь {data["user_first_name"]} {data["user_last_name"]} добавлен в черный список.', Button().next())
+                if data == False:
+                    bot.bot_write(user_id, 'Некого добавлять', Button().back_to_menu())
+                else:
+                    add_to_blocked(data, user_id)
+                    bot.bot_write(user_id, f'Пользователь {data["user_first_name"]} {data["user_last_name"]} добавлен в черный список.', Button().next())
             elif text == 'Добавить в избранные':
                 data = bot.get_user(pk_number)
-                add_user_to_favorites(data, user_id)
-                bot.bot_write(user_id, f'Пользователь {data["user_first_name"]} {data["user_last_name"]} добавлен в список избранных.', Button().next())
+                if data == False:
+                    bot.bot_write(user_id, 'Некого добавлять', Button().back_to_menu())
+                else:
+                    add_user_to_favorites(data, user_id)
+                    bot.bot_write(user_id, f'Пользователь {data["user_first_name"]} {data["user_last_name"]} добавлен в список избранных.', Button().next())
             elif text == 'Показать понравившиеся фотографии':
                 bot.bot_write(user_id, 'Фотографии находящиеся в списке:', Button().delete_photo())
                 bot.show_liked_photo(user_id, pk_number)
@@ -74,3 +85,4 @@ for event in VKinder().bot_longpoll.listen():
                 bot.bot_write(user_id, 'Возвращаемся к списку.', Button().next())
             elif text == 'Вернуться к поиску' and pk_number == 0:
                 bot.bot_write(user_id, 'Вы еще не начали поиск или не выполнили условия поиска!', Button().start())
+
