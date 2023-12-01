@@ -171,6 +171,8 @@ class VKinder():
                     
     def get_user(self, pk_number: int) -> dict:
         data = get_user(pk_number)
+        if data == None:
+            return False
         user_data = {'user_vk_id': data[0], 'user_first_name': data[1], 'user_last_name': data[2]}
         return user_data
     
