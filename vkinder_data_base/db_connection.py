@@ -92,7 +92,8 @@ def drop_users(client_vk_id):
 @dbconnect
 def get_user(pk_user: int):
     session = Session
-    users = session.query(Users.user_vk_id, Users.user_first_name, Users.user_last_name).filter(Users.user_id==pk_user).first()
+    blocked_users = session.query(Blocked.user_vk_id).subquery()
+    users = session.query(Users.user_vk_id, Users.user_first_name, Users.user_last_name).filter(Users.user_id==pk_user, Users.user_vk_id.not_in(blocked_users)).first()
     return users
 
 
@@ -194,3 +195,10 @@ def delete_all(client_vk_id):
     session.query(Likes).filter_by(client_id=client_id).delete()
     session.query(Blocked).filter_by(client_id=client_id).delete()
     session.query(Favorites).filter_by(client_id=client_id).delete()
+
+@dbconnect
+def alter_sequence():
+    session = Session()
+    texte = sq.text('ALTER SEQUENCE users_user_id_seq RESTART WITH 1')
+    session.execute(texte)
+
